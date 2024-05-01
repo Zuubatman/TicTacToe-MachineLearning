@@ -1,6 +1,11 @@
 import './App.css';
 import React from 'react'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+// import { readFile } from 'fs';
+import { Typography, 
+          Grid, 
+          TextField
+        } from '@mui/material';
 
 function distanciaHamming(arrayDado , arrayEntrada){
   let dist = 0; 
@@ -110,8 +115,7 @@ console.log(dado)
 }
 
 function arvoreDecisao(){
-  const dado = 
-  ['x','x','o','b','o','x','x','x','o']
+  const dado = ['x','x','o','b','o','x','x','x','o']
   let igual = verificaIgual(dado.slice(0,3))
   if(igual===true){
     if(dado[0]==='x'){
@@ -195,26 +199,97 @@ function arvoreDecisao(){
 function ad(){
   let a = arvoreDecisao()
   console.log(a)
-
-
 }
 
-const readFile = async () => {
-  const response = await fetch('dados.txt');
-  const text = await response.text();
-  const dataArray = text.split('\n'); // Dividir o texto por linhas
-  console.log(dataArray)
-};
+// function readFile(){
+//   fetch('dados.txt')
+//   .then(response => response.text())
+//   .then(text => {
+//     const array = text.split("\n");
+//     console.log(array);
+//   })
+// }
 
-export default function App() {
+
+export default function App(){ 
+
+  const [board, setBoard] = useState(['b','b','b','b','b','b','b','b','b'])
+  const [error, setError] = useState(false)
+  const [playerPlayed, setPlayerPlayed] = useState(false)
 
   useEffect(() => {
-    readFile()
+    // readFile()
       //knn()
-      // ad()
+      //ad()
   }, []) 
 
+  useEffect(() => {
+    console.log(board)
+  }, [board]) 
+
+  function playerPlay(item,index){
+    setPlayerPlayed(false)
+    let boardCopy = JSON.parse(JSON.stringify(board))
+    boardCopy[index] = item
+    setBoard(boardCopy)
+    setPlayerPlayed(true)
+  }
+
+  useEffect(() => {
+    function computerPlay(){
+      console.log("O computador está pensando...");
+      let valid = false
+      let boardCopy = JSON.parse(JSON.stringify(board))
+      setTimeout(() => {
+        while(!valid){
+          let squareToPlay =  Math.floor(Math.random() * 9);
+          if(boardCopy[squareToPlay] === 'b'){
+            boardCopy[squareToPlay] = 'o'
+            valid = true
+          }
+        }
+        console.log(boardCopy)
+        setBoard(boardCopy)
+        setPlayerPlayed(false)
+      }, 2000);
+    }
+
+    console.log(playerPlayed)
+    if(playerPlayed){
+      computerPlay()
+    }
+
+  },[playerPlayed])
+
   return (
-    <div>oii</div>
+    <Grid sx={12} container direction={'column'} alignItems={'center'} gap={1}>
+      <Typography display={'flex'} variant={'h4'} justifyContent={'center'}>
+        <strong>TicTacToe - Machine Learning</strong>
+      </Typography>
+      <Grid item display={'flex'} sx={12} container width={372} direction={'row'} style={{marginTop: '60px'}}>
+        {
+          board.map((square, index) => (
+            <Grid key={square.id} width={124}> 
+              <TextField 
+                value={board[index] === 'b' ? '' : board[index]}
+                onChange={(event) => {
+                  let item = event.target.value
+                  if( item === 'x' ){
+                    playerPlay(item, index)
+                  }
+                  else {
+                    setError(true)
+                  }
+                }}
+                style={{width: '100%'}}/>
+            </Grid>
+          ))
+        }
+      </Grid>
+      {/* <Grid>{error && `Por favor insira um valor válido do tauleiro. (x ou o)`}</Grid> */}
+    </Grid>
+
   );
+
+
 }
