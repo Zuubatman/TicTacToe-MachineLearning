@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 // import { readFile } from 'fs';
 import { Typography, 
           Grid, 
-          TextField
+          TextField,
+          Button
         } from '@mui/material';
 
 function distanciaHamming(arrayDado , arrayEntrada){
@@ -84,9 +85,9 @@ function classifica(dadosMaisProximosIndex, dados){
 
 //[dist]
 //dado
-function knn(){
+function knn(entrada){
+  console.log(entrada)
   const k = 3
-  const entrada = ['x','x','x','b','b','o','o','o','x']
   const data = [
     ['x','x','x','o','o','b','b','b','b', 'negative'],
     ['x','b','o','o','b','o','x','x','x', 'negative'],
@@ -100,8 +101,7 @@ function knn(){
 
   let classificaoFninal = classifica(dadosMaisProxIndex, data)
 
-  console.log(classificaoFninal)
-  
+  return classificaoFninal
 }
 
 function verificaIgual(dado){
@@ -114,8 +114,7 @@ console.log(dado)
   return true;
 }
 
-function arvoreDecisao(){
-  const dado = ['x','x','o','b','o','x','x','x','o']
+function arvoreDecisao(dado){
   let igual = verificaIgual(dado.slice(0,3))
   if(igual===true){
     if(dado[0]==='x'){
@@ -196,32 +195,12 @@ function arvoreDecisao(){
   else return 'empate'
 }
 
-function ad(){
-  let a = arvoreDecisao()
-  console.log(a)
-}
-
-// function readFile(){
-//   fetch('dados.txt')
-//   .then(response => response.text())
-//   .then(text => {
-//     const array = text.split("\n");
-//     console.log(array);
-//   })
-// }
-
-
 export default function App(){ 
 
   const [board, setBoard] = useState(['b','b','b','b','b','b','b','b','b'])
   const [error, setError] = useState(false)
   const [playerPlayed, setPlayerPlayed] = useState(false)
-
-  useEffect(() => {
-    // readFile()
-      //knn()
-      //ad()
-  }, []) 
+  const [computerIsPlaying, setComputerIsPlaying] = useState(false)
 
   useEffect(() => {
     console.log(board)
@@ -235,9 +214,23 @@ export default function App(){
     setPlayerPlayed(true)
   }
 
+  function verifyFullBoard(){
+    let contFreeSquares = 0;
+    for(let i = 0 ; i < board.length; i++){
+      let item = board[i]
+      if(item === 'b'){
+        contFreeSquares++
+      }
+    }
+    if(contFreeSquares > 0){
+      return false
+    }
+    return true
+  }
+
   useEffect(() => {
     function computerPlay(){
-      console.log("O computador está pensando...");
+      setComputerIsPlaying(true)
       let valid = false
       let boardCopy = JSON.parse(JSON.stringify(board))
       setTimeout(() => {
@@ -251,19 +244,27 @@ export default function App(){
         console.log(boardCopy)
         setBoard(boardCopy)
         setPlayerPlayed(false)
+        setComputerIsPlaying(false)
       }, 2000);
     }
 
     console.log(playerPlayed)
-    if(playerPlayed){
+
+    if(playerPlayed && !verifyFullBoard()){
       computerPlay()
     }
 
   },[playerPlayed])
 
+  function handleRestart(){
+    setBoard(['b','b','b','b','b','b','b','b','b'])
+    setPlayerPlayed(false)
+    setComputerIsPlaying(false)
+  }
+
   return (
     <Grid sx={12} container direction={'column'} alignItems={'center'} gap={1}>
-      <Typography display={'flex'} variant={'h4'} justifyContent={'center'}>
+      <Typography style={{marginTop: '30px'}} display={'flex'} variant={'h4'} justifyContent={'center'}>
         <strong>TicTacToe - Machine Learning</strong>
       </Typography>
       <Grid item display={'flex'} sx={12} container width={372} direction={'row'} style={{marginTop: '60px'}}>
@@ -271,6 +272,7 @@ export default function App(){
           board.map((square, index) => (
             <Grid key={square.id} width={124}> 
               <TextField 
+                disabled={computerIsPlaying}
                 value={board[index] === 'b' ? '' : board[index]}
                 onChange={(event) => {
                   let item = event.target.value
@@ -286,10 +288,20 @@ export default function App(){
           ))
         }
       </Grid>
-      {/* <Grid>{error && `Por favor insira um valor válido do tauleiro. (x ou o)`}</Grid> */}
+      <Grid style={{marginTop: '10px'}}>
+        <Button size={'small'} variant='contained' onClick={() => handleRestart()}>
+          Reiniciar
+        </Button>
+      </Grid>
+      <Grid style={{marginTop: '10px'}}>{computerIsPlaying ? `O computador está pensando...` : '‎'}</Grid>
+      <Grid item style={{marginTop: '20px'}} container direction={'column'} justifyContent={'center'} gap={2} >
+        <Typography display={'flex'} variant={'h6'} justifyContent={'center'}>
+          <strong>Classificação Algoritimo K-NN: {knn(board)}</strong>
+        </Typography>
+        <Typography display={'flex'} variant={'h6'} justifyContent={'center'}>
+          <strong>Classificação Algoritimo Árvore de Decisão: {arvoreDecisao(board)}</strong>
+        </Typography>
+      </Grid>
     </Grid>
-
   );
-
-
 }
